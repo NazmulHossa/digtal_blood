@@ -1,0 +1,351 @@
+/*
+ * app.css — Global Stylesheet
+ * ────────────────────────────
+ * Digital Blood Connect-এর সব global style এখানে।
+ *
+ * ১. Tailwind CSS directives (@tailwind)
+ * ২. CSS Custom Properties (রঙের variables)
+ * ৩. Global reset styles
+ * ৪. Custom utility classes
+ * ৫. Animations
+ */
+
+/* ─── Tailwind CSS Core ────────────────────────────────────────
+   Tailwind তিনটি "layer" ব্যবহার করে:
+   - base:       Browser default styles reset করে (h1, p, a, etc.)
+   - components: Reusable component styles
+   - utilities:  Single-purpose classes (mt-4, flex, text-red-500, etc.)
+*/
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+/* ─── CSS Custom Properties (Design Tokens) ──────────────────
+   :root মানে পুরো document।
+   এই variables গুলো পুরো project-এ ব্যবহার করা যাবে।
+
+   কেন variables?
+   রঙ পরিবর্তন করতে হলে শুধু এখানে একবার বদলালেই হবে।
+*/
+:root {
+    /* Brand Colors */
+    --color-primary:      #BC0000;    /* Blood Red — মূল brand রঙ */
+    --color-primary-dark: #8B0000;    /* Dark Red — gradient-এর জন্য */
+    --color-primary-light:#FEF2F2;    /* Light Red — background tint */
+
+    /* Neutral Colors */
+    --color-white:  #FFFFFF;
+    --color-bg:     #F9FAFB;          /* Soft Gray background */
+    --color-border: #E5E7EB;          /* Border রঙ */
+    --color-text:   #1F2937;          /* Primary text */
+    --color-muted:  #6B7280;          /* Secondary text */
+
+    /* Status Colors */
+    --color-success: #166534;
+    --color-warning: #C2410C;
+    --color-info:    #1E40AF;
+
+    /* Typography */
+    --font-display: 'Georgia', 'Times New Roman', serif;
+    --font-body:    system-ui, -apple-system, sans-serif;
+
+    /* Spacing */
+    --radius-sm:  6px;
+    --radius-md:  10px;
+    --radius-lg:  12px;
+    --radius-xl:  16px;
+}
+
+
+/* ─── Global Base Styles ──────────────────────────────────────*/
+@layer base {
+    /* সব element-এ border-box sizing */
+    *, *::before, *::after {
+        box-sizing: border-box;
+    }
+
+    /* HTML body */
+    body {
+        font-family: var(--font-body);
+        background-color: var(--color-bg);
+        color: var(--color-text);
+        line-height: 1.6;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* Heading গুলো serif font-এ */
+    h1, h2, h3 {
+        font-family: var(--font-display);
+        line-height: 1.3;
+    }
+
+    /* Link গুলোর default style */
+    a {
+        color: var(--color-primary);
+        text-decoration: none;
+    }
+
+    a:hover {
+        text-decoration: underline;
+    }
+
+    /* Focus outline (accessibility) */
+    :focus-visible {
+        outline: 2px solid var(--color-primary);
+        outline-offset: 2px;
+    }
+
+    /* Input ও select focus state */
+    input:focus,
+    select:focus,
+    textarea:focus {
+        border-color: var(--color-primary) !important;
+        box-shadow: 0 0 0 3px rgba(188, 0, 0, 0.1);
+        outline: none;
+    }
+}
+
+
+/* ─── Custom Component Classes ───────────────────────────────*/
+@layer components {
+
+    /* Primary Button */
+    .btn-primary {
+        @apply inline-flex items-center gap-2 px-5 py-2.5 rounded-lg font-semibold text-sm;
+        background: var(--color-primary);
+        color: white;
+        border: none;
+        cursor: pointer;
+        transition: background 0.2s, transform 0.1s;
+    }
+
+    .btn-primary:hover {
+        background: var(--color-primary-dark);
+        transform: translateY(-1px);
+        text-decoration: none;
+    }
+
+    .btn-primary:active {
+        transform: translateY(0);
+    }
+
+    /* Secondary Button */
+    .btn-secondary {
+        @apply inline-flex items-center gap-2 px-5 py-2.5 rounded-lg font-semibold text-sm;
+        background: var(--color-primary-light);
+        color: var(--color-primary);
+        border: 1.5px solid #FECACA;
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+
+    /* Form Input */
+    .form-input {
+        @apply w-full rounded-lg text-sm;
+        padding: 0.625rem 0.75rem;
+        border: 1.5px solid var(--color-border);
+        font-family: var(--font-body);
+        color: var(--color-text);
+        background: white;
+        transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .form-input:focus {
+        border-color: var(--color-primary);
+        box-shadow: 0 0 0 3px rgba(188, 0, 0, 0.08);
+    }
+
+    /* Form Label */
+    .form-label {
+        @apply block text-xs font-semibold mb-1;
+        color: #374151;
+    }
+
+    /* Error message */
+    .form-error {
+        @apply text-xs mt-1;
+        color: var(--color-primary);
+    }
+
+    /* Card */
+    .card {
+        @apply rounded-xl border;
+        background: white;
+        border-color: var(--color-border);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    }
+
+    /* Badge */
+    .badge-blood {
+        @apply inline-flex items-center justify-center font-black rounded-full;
+        background: var(--color-primary);
+        color: white;
+        font-size: 0.85rem;
+        min-width: 44px;
+        height: 44px;
+        padding: 0 0.5rem;
+    }
+
+    /* Status badges */
+    .badge-available {
+        @apply inline-flex items-center rounded-full text-xs font-semibold px-2.5 py-0.5;
+        background: #DCFCE7;
+        color: #166534;
+    }
+
+    .badge-unavailable {
+        @apply inline-flex items-center rounded-full text-xs font-semibold px-2.5 py-0.5;
+        background: #FEE2E2;
+        color: #991B1B;
+    }
+
+    .badge-urgent {
+        @apply inline-flex items-center rounded-full text-xs font-bold px-2.5 py-0.5;
+        background: var(--color-primary);
+        color: white;
+        letter-spacing: 0.05em;
+    }
+
+    /* Section divider */
+    .section-divider {
+        @apply my-8;
+        border: none;
+        border-top: 1.5px solid var(--color-border);
+    }
+
+    /* Page header gradient */
+    .page-header {
+        background: linear-gradient(to right, var(--color-primary-dark), var(--color-primary));
+        padding: 2.5rem 0;
+        color: white;
+    }
+}
+
+
+/* ─── Utility Classes ─────────────────────────────────────────*/
+@layer utilities {
+    /* Text truncation */
+    .truncate-2 {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    /* Smooth transition for hover effects */
+    .hover-lift {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .hover-lift:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+    }
+}
+
+
+/* ─── Custom Animations ───────────────────────────────────────
+   এই animations গুলো সব Vue component-এ ব্যবহার করা যাবে।
+*/
+
+/* Live indicator (green/red dot pulse) */
+@keyframes pulse-dot {
+    0%, 100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.5;
+        transform: scale(1.3);
+    }
+}
+
+/* Fade in from bottom (page load animation) */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Fade in (simple) */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+/* Shimmer loading effect */
+@keyframes shimmer {
+    0%   { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+}
+
+/* Apply animations */
+.animate-pulse-dot {
+    animation: pulse-dot 1.5s ease-in-out infinite;
+}
+
+.animate-fade-up {
+    animation: fadeInUp 0.5s ease-out forwards;
+}
+
+.animate-fade-in {
+    animation: fadeIn 0.3s ease-out forwards;
+}
+
+/* Skeleton loading (shimmer effect) */
+.skeleton {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+    border-radius: 4px;
+}
+
+
+/* ─── Scrollbar Styling ───────────────────────────────────────*/
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #BC0000;
+    border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #8B0000;
+}
+
+
+/* ─── Print Styles ────────────────────────────────────────────
+   Science fair-এ print করার জন্য
+*/
+@media print {
+    nav,
+    footer,
+    .btn-primary,
+    .btn-secondary {
+        display: none !important;
+    }
+
+    body {
+        background: white !important;
+        font-size: 12pt;
+    }
+
+    .card {
+        border: 1px solid #ccc !important;
+        box-shadow: none !important;
+    }
+}
