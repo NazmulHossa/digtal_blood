@@ -9,34 +9,13 @@ use Carbon\Carbon;
 
 /**
  * ============================================================
- * BadgeService — Gamification & Donation Tracking
+ * BadgeService — Gamification Engine
  * ============================================================
  *
- * এই service ডোনারদের points ও badges manage করে।
+ * ডোনারদের encourage করার জন্য badge system।
+ * Points award করে, badges upgrade করে, donation timer track করে।
  *
- * কেন আলাদা service?
- * ───────────────────
- * সব logic এক জায়গায় রাখলে:
- *   ✅ DashboardController clean থাকে
- *   ✅ Testing করা সহজ হয়
- *   ✅ Logic পরিবর্তন করলে এক জায়গায় করলেই হয়
- *
- * কখন points দেওয়া হয়?
- * ──────────────────
- * 1. Registration: +10 pts (নতুন ডোনার sign up করলে)
- * 2. Profile complete: +20 pts (সব তথ্য দিলে)
- * 3. Donation: +50 pts (blood donation record করলে)
- * 4. Streak bonus: +30 pts (প্রতি ৩তম donation)
- *
- * Badge Levels:
- * ────────────
- *   🥉 Bronze : 0–99 pts     (Default)
- *   🥈 Silver : 100–299 pts  (committed donor)
- *   🥇 Gold   : 300–599 pts  (experienced donor)
- *   🦸 Hero   : 600+ pts     (community hero)
- *
- * Usage in DashboardController:
- * ──────────────────────────────
+ * Usage:
  *   // Registration-এ প্রথম পয়েন্ট দাও
  *   app(BadgeService::class)->awardRegistration($user);
  * ============================================================
@@ -104,11 +83,11 @@ class BadgeService
     }
 
     /**
-     * Donation record করলে পয়েন্ট দাও।
-     * এবং প্রতি ৩তম donation-এ bonus দাও।
+     * Donation record হলে পয়েন্ট দাও।
+     * প্রতি ৩তম donation-এ +30 bonus।
      *
      * @param  User  $user
-     * @return array ['points_earned' => int, 'badge_upgraded' => bool, 'new_level' => string|null]
+     * @return array ['points_earned' => int, 'badge_upgraded' => bool, 'new_level' => string]
      */
     public function awardDonation(User $user): array
     {
@@ -119,115 +98,96 @@ class BadgeService
             'donation_count' => 0,
         ]);
 
-        $oldLevel = $badge->level;
         $pointsEarned = self::POINTS_DONATION;
+        $newCount = $badge->donation_count + 1;
 
-        // ৩তম donation-এ bonus
-        $badge->donation_count++;
-        if ($badge->donation_count % 3 === 0) {
+        // প্রতি ৩তম donation-এ bonus
+        if ($newCount % 3 === 0) {
             $pointsEarned += self::POINTS_STREAK_BONUS;
         }
 
-        $this->addPoints($user, $pointsEarned, 'donation', "Donation #{$badge->donation_count}");
+        // Points add করো
+        $this->addPoints($user, $pointsEarned, 'donation', "Donation #{$newCount}");
 
-        // Badge reload + upgrade check
-        $badge->refresh();
-        $newLevel = $this->getLevel($badge->total_points);
+        // Badge update করো
+        $badge->increment('donation_count');
+        $badge->increment('total_points', $pointsEarned);
 
-        if ($newLevel !== $oldLevel) {
+        // Badge level check করো
+        $oldLevel = $badge->level;
+        $newLevel = $this->determineLevel($badge->total_points);
+        $upgraded = $oldLevel !== $newLevel;
+
+        if ($upgraded) {
             $badge->update(['level' => $newLevel]);
-            return [
-                'points_earned' => $pointsEarned,
-                'badge_upgraded' => true,
-                'new_level' => $newLevel,
-            ];
         }
 
         return [
             'points_earned' => $pointsEarned,
-            'badge_upgraded' => false,
-            'new_level' => null,
+            'badge_upgraded' => $upgraded,
+            'new_level' => $newLevel,
         ];
     }
 
     /**
-     * Donation countdown timer calculate করো।
-     * Medical rule: ৯০ দিন বিরতি লাগবে।
+     * Donation countdown timer data।
+     * 90-দিনের মেডিক্যাল rule অনুযায়ী।
      *
      * @param  User  $user
-     * @return array|null ['days_remaining' => int, 'eligible_date' => string, 'can_donate' => bool]
+     * @return array ['can_donate_now' => bool, 'days_remaining' => int|null, 'eligible_date' => string]
      */
-    public function getDonationTimer(User $user): ?array
+    public function getDonationTimer(User $user): array
     {
         if (! $user->last_donation_date) {
-            return null; // কোন donation history নেই
+            return [
+                'can_donate_now' => true,
+                'days_remaining' => null,
+                'eligible_date' => null,
+            ];
         }
 
-        $eligibleDate = $user->last_donation_date->addDays(90);
+        $eligible = $user->last_donation_date->addDays(90);
         $today = Carbon::today();
-
-        if ($today->greaterThanOrEqualTo($eligibleDate)) {
-            return null; // Already eligible
-        }
-
-        $daysRemaining = $today->diffInDays($eligibleDate);
+        $canDonate = $eligible <= $today;
 
         return [
-            'days_remaining' => $daysRemaining,
-            'eligible_date' => $eligibleDate->format('F d, Y'),
-            'can_donate' => false,
+            'can_donate_now' => $canDonate,
+            'days_remaining' => $canDonate ? 0 : $today->diffInDays($eligible),
+            'eligible_date' => $eligible->format('Y-m-d'),
         ];
     }
 
     /**
-     * পয়েন্ট transaction log-এ যোগ করো।
-     * এবং DonorBadge-এর total_points আপডেট করো।
-     *
+     * Points add করো transaction log-এ।
      * @param  User    $user
      * @param  int     $points
-     * @param  string  $reason      (registration|profile_complete|donation)
-     * @param  string  $description (display এর জন্য)
+     * @param  string  $reason (registration, profile_complete, donation)
+     * @param  string  $description
      */
-    protected function addPoints(User $user, int $points, string $reason, string $description): void
+    private function addPoints(User $user, int $points, string $reason, string $description): void
     {
-        // Transaction log তৈরি করো
         DonorPoint::create([
             'user_id' => $user->id,
             'points' => $points,
             'reason' => $reason,
             'description' => $description,
         ]);
-
-        // Badge update করো
-        $badge = $user->badge ?? DonorBadge::create([
-            'user_id' => $user->id,
-            'level' => 'bronze',
-            'total_points' => 0,
-            'donation_count' => 0,
-        ]);
-
-        $newTotal = $badge->total_points + $points;
-        $newLevel = $this->getLevel($newTotal);
-
-        $badge->update([
-            'total_points' => $newTotal,
-            'level' => $newLevel,
-        ]);
     }
 
     /**
-     * Total points থেকে badge level বের করো।
-     *
+     * Total points থেকে badge level decide করো।
      * @param  int  $totalPoints
-     * @return string (bronze|silver|gold|hero)
+     * @return string (bronze, silver, gold, hero)
      */
-    protected function getLevel(int $totalPoints): string
+    private function determineLevel(int $totalPoints): string
     {
         if ($totalPoints >= self::THRESHOLD_HERO) {
             return 'hero';
-        } elseif ($totalPoints >= self::THRESHOLD_GOLD) {
+        }
+        if ($totalPoints >= self::THRESHOLD_GOLD) {
             return 'gold';
-        } elseif ($totalPoints >= self::THRESHOLD_SILVER) {
+        }
+        if ($totalPoints >= self::THRESHOLD_SILVER) {
             return 'silver';
         }
         return 'bronze';
