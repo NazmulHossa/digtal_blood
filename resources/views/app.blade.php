@@ -16,6 +16,7 @@
         @inertiaHead
     </head>
     <body class="font-sans antialiased">
-        @inertia
+        <!-- This div is CRITICAL for Inertia.js to mount Vue -->
+        <div id="app" data-page="{{ json_encode($page) }}"></div>
     </body>
 </html>
