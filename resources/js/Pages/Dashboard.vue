@@ -96,10 +96,14 @@ const statusStyle = (s) => ({
           🩸 Digital Blood Connect
         </Link>
 
-        <div class="flex items-center gap-4">
+        <div class="flex items-center gap-4 flex-wrap">
           <Link href="/donors"
                 style="color:rgba(255,255,255,0.85); text-decoration:none; font-size:0.875rem;">
             Find Donors
+          </Link>
+          <Link href="/requests"
+                style="color:rgba(255,255,255,0.85); text-decoration:none; font-size:0.875rem;">
+            Blood Requests
           </Link>
 
           <!-- ★ Connection Inbox Link with pending count badge -->

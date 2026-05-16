@@ -251,6 +251,7 @@ const submit = () => {
 
                 <!-- ── Submit ─────────────────────────────────── -->
                 <button
+                    type="button"
                     @click="submit"
                     :disabled="form.processing"
                     class="btn-submit"

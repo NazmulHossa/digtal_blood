@@ -20,10 +20,10 @@ const form = useForm({
 const isSent = ref(props.status === 'pending');
 
 const sendRequest = () => {
-    form.post(route('donor.connect'), {
+    form.post(route('connections.store'), {
         preserveScroll: true,
         onSuccess: () => {
-            isSent.ref = true;
+            isSent.value = true;
         },
     });
 };

@@ -129,11 +129,21 @@ const timeAgo = (dateString) => {
           <div class="flex flex-col gap-3">
             <Link href="/donors" style="color:white; text-decoration:none; padding: 0.5rem 0;">Find Donors</Link>
             <Link href="/requests" style="color:white; text-decoration:none; padding: 0.5rem 0;">Blood Requests</Link>
-            <Link href="/register"
-                  style="background:white; color:#BC0000; text-align:center; padding:0.6rem;
-                         border-radius:6px; text-decoration:none; font-weight:600;">
-              Register as Donor
-            </Link>
+            <template v-if="$page.props.auth.user">
+              <Link href="/dashboard"
+                    style="background:white; color:#BC0000; text-align:center; padding:0.6rem;
+                           border-radius:6px; text-decoration:none; font-weight:600;">
+                My Dashboard
+              </Link>
+            </template>
+            <template v-else>
+              <Link href="/login" style="color:white; text-decoration:none; padding: 0.5rem 0;">Login</Link>
+              <Link href="/register"
+                    style="background:white; color:#BC0000; text-align:center; padding:0.6rem;
+                           border-radius:6px; text-decoration:none; font-weight:600;">
+                Register as Donor
+              </Link>
+            </template>
           </div>
         </div>
       </div>

@@ -11,7 +11,8 @@
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
 
-        <!-- Scripts -->
+        <!-- Scripts: @routes injects Ziggy config so Vue can use route() (Register, Login, etc.) -->
+        @routes
         @vite(['resources/css/app.css', 'resources/js/app.js'])
         @inertiaHead
     </head>

@@ -61,7 +61,7 @@ const badgeStyle = (name) => {
                               font-weight:700; font-family:'Georgia',serif;">
           🩸 Digital Blood Connect
         </Link>
-        <div class="flex gap-3 items-center">
+        <div class="flex gap-3 items-center flex-wrap">
           <Link href="/donors"
                 style="color:rgba(255,255,255,0.85); text-decoration:none; font-size:0.875rem;">
             Find Donors
@@ -71,6 +71,23 @@ const badgeStyle = (name) => {
                        border-radius:6px; text-decoration:none; font-weight:600; font-size:0.875rem;">
             + Post Request
           </Link>
+          <Link v-if="$page.props.auth.user"
+                href="/dashboard"
+                style="color:rgba(255,255,255,0.9); text-decoration:none; font-size:0.875rem;
+                       border:1px solid rgba(255,255,255,0.5); padding:0.35rem 0.85rem; border-radius:6px;">
+            Dashboard
+          </Link>
+          <template v-else>
+            <Link href="/login"
+                  style="color:rgba(255,255,255,0.9); text-decoration:none; font-size:0.875rem;">
+              Login
+            </Link>
+            <Link href="/register"
+                  style="background:rgba(255,255,255,0.95); color:#BC0000; padding:0.4rem 1rem;
+                         border-radius:6px; text-decoration:none; font-weight:600; font-size:0.875rem;">
+              Register
+            </Link>
+          </template>
         </div>
       </div>
     </nav>
