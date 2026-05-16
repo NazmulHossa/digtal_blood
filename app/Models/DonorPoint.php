@@ -10,20 +10,20 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * ────────────────
  * প্রতিটি পয়েন্ট অর্জনের transaction log রাখে।
  *
- * ব্যবহার:
- *   - User registration → +10 pts
- *   - Profile complete → +20 pts
- *   - Each donation → +50 pts
- *   - Every 3rd donation → +30 bonus pts
+ * reason values:
+ *   'registration'     → +10
+ *   'profile_complete' → +20
+ *   'donation'         → +50
+ *   'streak_bonus'     → +30
  */
 class DonorPoint extends Model
 {
     protected $table = 'donor_points';
-    
+
     protected $fillable = [
         'user_id',
         'points',
-        'reason',      // registration, profile_complete, donation
+        'reason',
         'description',
     ];
 
@@ -32,14 +32,19 @@ class DonorPoint extends Model
         'updated_at' => 'datetime',
     ];
 
-    // ── Relationship ──────────────────────────────────────────
-
-    /**
-     * এই পয়েন্ট কার।
-     * ব্যবহার: $point->user->name → "Rahim Uddin"
-     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function getReasonLabelAttribute(): string
+    {
+        return match ($this->reason) {
+            'registration'     => '✅ Joined Platform',
+            'profile_complete' => '📝 Completed Profile',
+            'donation'         => '🩸 Blood Donated',
+            'streak_bonus'     => '🔥 Streak Bonus',
+            default            => $this->reason,
+        };
     }
 }
